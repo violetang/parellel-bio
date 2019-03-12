@@ -62,19 +62,6 @@ const char *accel_method_names[NUM_ACCELERATION_METHODS] = {
 
 int main(int argc, const char **argv)
 {
-	/*
-	* MPI environment set up
-	*/
-	int my_rank;
-	int p;
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &p);
-	float dest = 0;
-	int tag = 0;
-	int source;
-	MPI_Status status;
-
 	options *opt = NULL;	/* run options */
 	data *dat = NULL;	/* genetic data */
 	model *mod = NULL;	/* model parameters */
@@ -95,6 +82,21 @@ int main(int argc, const char **argv)
 	/* parse command-line options */
 	if ((err = parse_options(opt, dat, argc, argv)))
 		goto FREE_AND_EXIT;
+
+
+	/*
+	* MPI environment set up
+	*/
+
+	int my_rank;
+	int p = opt-> process;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &p);
+	float dest = 0;
+	int tag = 0;
+	int source;
+	MPI_Status status;
 
 	/* read data */
 	if ((err = read_file(opt, dat)))
@@ -123,6 +125,8 @@ FREE_AND_EXIT:
 	free_model(mod,opt);
 	free_options(opt);
 	free_data(dat);
+
+	MPI_Finalize();
 
 	return err;
 
