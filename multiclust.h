@@ -165,6 +165,7 @@ struct _options {
 	double p_lower_bound;		/*!< lower bound on allele frequencies */
 	const char *qfile;
 	const char *pfile;
+	int process;      /*!< the number of process*
 };
 
 /**

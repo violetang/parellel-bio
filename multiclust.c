@@ -455,6 +455,8 @@ int make_options(options **opt)
 	(*opt)->seed = 1234567;
 	(*opt)->n_init = 50;
 
+	(*opt)->process = 1 ; /*defalut process = 1*/
+
 	/* convergence criterion set to match Lange's definition */
 	(*opt)->max_iter = 0;	/*2000;*/
 	(*opt)->rel_error = 0;	/*1e-6;*/
