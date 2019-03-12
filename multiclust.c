@@ -70,6 +70,10 @@ int main(int argc, const char **argv)
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
+	float dest = 0;
+	int tag = 0;
+	int source;
+	MPI_Status status;
 
 	options *opt = NULL;	/* run options */
 	data *dat = NULL;	/* genetic data */
@@ -904,6 +908,9 @@ int parse_options(options *opt, data *dat, int argc, const char **argv)
 				break;
 			case 'v':
 				opt->verbosity = VERBOSE;
+				break;
+			case 'P':
+				opt->process = read_int(argc,argv,++i,(void*)opt);
 				break;
 			default:
 				err = INVALID_CMD_OPTION;
