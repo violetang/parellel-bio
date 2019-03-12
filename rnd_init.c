@@ -425,6 +425,7 @@ void random_allele_partition(data *dat, model *mod)
 				for (m = m_start; m < dat->uniquealleles[l]; m++)
 					mod->diklm[i][k][l][m] = 0;
 			for (a = 0; a < dat->ploidy; a++) {
+				//srand(opt->processor*time(0))
 				k = (int) rand() % mod->K;
 				/* alleles are not array indices */
 				if (dat->L_alleles) {

@@ -14,7 +14,7 @@
  *        current best log likelihood has been observed X times
  */
 
-
+#include "mpi.h"
 #include <time.h>
 #include "cline.h"	/* command line */
 #include "multiclust.h"
@@ -62,6 +62,15 @@ const char *accel_method_names[NUM_ACCELERATION_METHODS] = {
 
 int main(int argc, const char **argv)
 {
+	/*
+	* MPI environment set up
+	*/
+	int my_rank;
+	int p;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &p);
+
 	options *opt = NULL;	/* run options */
 	data *dat = NULL;	/* genetic data */
 	model *mod = NULL;	/* model parameters */
