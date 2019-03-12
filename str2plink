@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $id_num = 0;
+my $ped = $ARGV[0];
+
+if ($ped) {
+<STDIN>;	# discard header
+
+while ((my $line = <STDIN>)) {
+	chomp $line;
+	my @haplo1 = split(' ', $line);
+	$line = <STDIN>;
+	chomp $line;
+	my @haplo2 = split(' ', $line);
+	$id_num++;
+	print "1 $id_num 0 0 0 -9";
+	for (my $i = 2; $i < @haplo1; $i++) {
+		print " $haplo1[$i] $haplo2[$i]";
+	}
+	print "\n";
+}
+
+} else {
+	my $header = <STDIN>;
+	chomp $header;
+	my @words = split(' ', $header);
+	shift @words;
+	shift @words;
+	$id_num++;
+	for my $word (@words) {
+		print "0 $id_num 0 0\n";
+	}
+}
