@@ -426,7 +426,7 @@ void random_allele_partition(data *dat, model *mod)
 					mod->diklm[i][k][l][m] = 0;
 			for (a = 0; a < dat->ploidy; a++) {
 				//srand(opt->processor*time(0))
-				k = (int) rand() % mod->K;
+				k = (int) rand() % mod->K;  //random pick up a k,and say that value(head/hail) is belong to that K(coin)
 				/* alleles are not array indices */
 				if (dat->L_alleles) {
 					for (m = m_start; m < dat->uniquealleles[l]; m++)
