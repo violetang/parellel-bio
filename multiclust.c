@@ -89,10 +89,10 @@ int main(int argc, const char **argv)
 	*/
 
 	int my_rank;
-	int p = opt-> process;
+	//int p = opt-> process;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &p);
+	MPI_Comm_size(MPI_COMM_WORLD, &opt->process);
 	float dest = 0;
 	int tag = 0;
 	int source;

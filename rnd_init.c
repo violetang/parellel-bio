@@ -32,7 +32,7 @@ void random_initialize_admixture(options *opt, data *dat, model *mod);
 int randem_initialize_admixture(options *opt, data *dat, model *mod);
 void random_individual_partition(data *dat, model *mod);
 void random_individual_center(data *dat, model *mod);
-void random_allele_partition(data *dat, model *mod);
+void random_allele_partition(data *dat, model *mod, options *opt);
 void random_allele_center(data *dat, model *mod);
 void initialize_parameters_mixture(data *dat, model *mod);
 void initialize_parameters_admixture(options *opt, data *dat, model *mod);
@@ -311,7 +311,7 @@ void random_initialize_admixture(options *opt, data *dat, model *mod)
 	if (opt->initialization_method == TESTING)
 		test_initialization(dat, mod);
 	else
-		random_allele_partition(dat, mod);
+		random_allele_partition(dat, mod, opt);
 
 	m_step_admixture(opt, dat, mod);
 	//print_param(opt, dat, mod);
@@ -414,7 +414,7 @@ int randem_initialize_admixture(options *opt, data *dat, model *mod)
  * @param mod model object
  * @return void
  */
-void random_allele_partition(data *dat, model *mod)
+void random_allele_partition(data *dat, model *mod, options *opt)
 {
 	int i, l, k, a, m, m_start;
 
@@ -425,7 +425,7 @@ void random_allele_partition(data *dat, model *mod)
 				for (m = m_start; m < dat->uniquealleles[l]; m++)
 					mod->diklm[i][k][l][m] = 0;
 			for (a = 0; a < dat->ploidy; a++) {
-				//srand(opt->processor*time(0))
+				srand(opt->process*time(0));
 				k = (int) rand() % mod->K;  //random pick up a k,and say that value(head/hail) is belong to that K(coin)
 				/* alleles are not array indices */
 				if (dat->L_alleles) {
