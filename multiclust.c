@@ -31,7 +31,7 @@ int allocate_model(options *opt, model *mod, data *dat);
 int synchronize(options *opt, data *dat, model *mod);
 
 /* do the data fitting or bootstrap */
-int estimate_model(options *opt, data *dat, model *mod, int bootstrap);
+int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_rank, int p);
 int maximize_likelihood(options *opt, data *dat, model *mod, int bootstrap);
 int run_bootstrap(options *opt, data *dat, model *mod);
 
@@ -62,6 +62,16 @@ const char *accel_method_names[NUM_ACCELERATION_METHODS] = {
 
 int main(int argc, const char **argv)
 {
+	//********************************************
+	int my_rank;    //the index of the process
+    int p;          //opt->process
+    
+    //initialize the MPI environment and configuration
+    MPI_Init(&argc, &argv);     
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
+	//*************************************************
+
 	options *opt = NULL;	/* run options */
 	data *dat = NULL;	/* genetic data */
 	model *mod = NULL;	/* model parameters */
@@ -83,21 +93,6 @@ int main(int argc, const char **argv)
 	if ((err = parse_options(opt, dat, argc, argv)))
 		goto FREE_AND_EXIT;
 
-
-	/*
-	* MPI environment set up
-	*/
-
-	int my_rank;
-	//int p = opt-> process;
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &opt->process);
-	float dest = 0;
-	int tag = 0;
-	int source;
-	MPI_Status status;
-
 	/* read data */
 	if ((err = read_file(opt, dat)))
 		goto FREE_AND_EXIT;
@@ -107,7 +102,7 @@ int main(int argc, const char **argv)
 		goto FREE_AND_EXIT;
 
 	/* estimate the model(s) using the observed data */
-	if ((err = estimate_model(opt, dat, mod, 0)))
+	if ((err = estimate_model(opt, dat, mod, 0, my_rank, p)))
 		goto FREE_AND_EXIT;
 
 	/* optionally run a bootstrap */
@@ -125,9 +120,8 @@ FREE_AND_EXIT:
 	free_model(mod,opt);
 	free_options(opt);
 	free_data(dat);
-
+	
 	MPI_Finalize();
-
 	return err;
 
 } /* main */
@@ -149,8 +143,20 @@ FREE_AND_EXIT:
  * @param bootstrap indicate if bootstrap run
  * @return error status
  */
-int estimate_model(options *opt, data *dat, model *mod, int bootstrap)
+int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_rank, int p)
 {
+	//MPI**********************************************
+	float dest = 0;
+    int tag = 1;
+    int source;     //Process sending the possibility 
+    MPI_Status status;
+
+    int max_processor = 0;  //processor who get the biggest logL
+    int max_logL = INT_MIN;
+    int amimax = 0; //int is 1 if processor is max, it's 0 otherwise
+
+	//**********************************************
+	
 	int total_iter = 0;
 	int err = NO_ERROR;
 
@@ -163,9 +169,7 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap)
 	//if(opt->block_relax == 1)
 	//	mod->K = 2;
 
-	do { //when not parallel, only one processor, so need loop to run agian with different start random possibility
-		 //if parallel, do we still need use loop?
-		
+	do { 
 		
 		/* Setting the largest size of the U and V arrays to be the larger of K and max_M */
 		if (dat->max_M < mod->K)
@@ -191,9 +195,47 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap)
 		/* was BUG: popq_admix() and indivq_admix() written here for
 		 * last iteration, not best iteration */
 
-		//after get the max possibility, the processor will clean all the data.
-		//so before free all the data, need save each processor's max possibility here
-		//then compare all processors' max ppssibility, only save the biggiest one. 
+		//************************************************************************
+		//different rank has different task
+		//????? result == mod->max_logL, or create a new variable, just in case.
+		if(my_rank == 0){          
+            for(int proc = 1; proc < p; proc++){
+                cout<<"Process 0 is recieving "<<endl;
+                MPI_Recv(&mod->max_logL, 1, MPI_FLOAT, proc, tag*proc, MPI_COMM_WORLD, &status);
+                if(max_logL < mod->max_logL){
+                    max_logL = mod->max_logL;
+                    max_processor = proc;
+                }
+            }
+            cout<<"the biggest one is"<<max_logL<<endl;
+            cout<<"the processor with biggest logL is"<<max_processor<<endl;
+            //Head node here knows which processor has the maxL
+            //So it has to send that info to every processor, so they can proceed
+            for (int proc = 1; proc < p; proc++){
+                if (proc == max_processor)
+                    amimax = 1;
+                MPI_Send(&amimax, 1, MPI_INT, proc, tag*proc*7, MPI_COMM_WORLD);
+            }
+            MPI_Barrier(MPI_COMM_WORLD);  
+		}
+		else
+		{
+			cout<<"Process "<<my_rank<<" sending "<<endl;
+			MPI_Send(&mod->max_logL, 1, MPI_FLOAT, dest, tag*my_rank, MPI_COMM_WORLD);
+			cout<<"my result = " << result;
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			
+			MPI_Recv(&amimax, 1, MPI_INT, 0, tag*my_rank*7, MPI_COMM_WORLD, &status);
+			
+			if (amimax == 1)
+				//do printout process
+				cout<< "Hey I am processor "<<my_rank<<" and I have the max logl"<<endl;
+			else if (amimax == 0)
+				cout<< "I am processor "<<my_rank<<" and I don't have the max logl :("<<endl;
+		}
+		//************************************************************************
+
 
 		/* free parameters */
 		free_model_data(mod,opt);
