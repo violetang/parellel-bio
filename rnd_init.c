@@ -23,6 +23,7 @@
  */
 
 #include "multiclust.h"
+#include <time.h>
 #define MAKE_1ARRAY MAKE_1ARRAY_RETURN
 
 void test_initialization(data *dat, model *mod);
@@ -50,6 +51,7 @@ void initialize_parameters_admixture(options *opt, data *dat, model *mod);
 int initialize_model(options *opt, data *dat, model *mod)
 {
 
+	printf("I'm here initialize_model\n");
 	if (opt->admixture) {
 		if (opt->pfile && opt->qfile) {
 			read_qfile(opt, dat, mod);
@@ -90,6 +92,7 @@ exit(0);
  */
 void random_initialize_mixture(options *opt, data *dat, model *mod)
 {
+	printf("I'm here random_initialize_mixture\n");
 	if (opt->initialization_method == RANDOM_PARTITION)
 		random_individual_partition(dat, mod);
 	else
@@ -110,6 +113,7 @@ void random_initialize_mixture(options *opt, data *dat, model *mod)
  */
 int randem_initialize_mixture(options *opt, data *dat, model *mod)
 {
+	printf("I'm here randem_initialize_mixture\n");
 	int i;
 	int n_init = mod->K > 1 ? opt->n_rand_em_init : 1;
 	int *I_K;
@@ -308,6 +312,7 @@ void initialize_parameters_mixture(data *dat, model *mod)
  */
 void random_initialize_admixture(options *opt, data *dat, model *mod)
 {
+	printf("I'm here random_initialize_admixture\n");
 	if (opt->initialization_method == TESTING)
 		test_initialization(dat, mod);
 	else
@@ -320,6 +325,7 @@ void random_initialize_admixture(options *opt, data *dat, model *mod)
 
 void test_initialization(data *dat, model *mod)
 {
+	printf("I'm here test_initialization\n");
 	int debug = 0;
 	int i, l, m, k, a, s = 0;
 
@@ -372,6 +378,7 @@ void test_initialization(data *dat, model *mod)
  */
 int randem_initialize_admixture(options *opt, data *dat, model *mod)
 {
+	printf("I'm randem_initialize_admixture\n");
 	int i;
 	int n_init = mod->K > 1 ? opt->n_rand_em_init : 1;
 	int n_haplotypes = dat->I * dat->ploidy;
@@ -416,6 +423,7 @@ int randem_initialize_admixture(options *opt, data *dat, model *mod)
  */
 void random_allele_partition(data *dat, model *mod, options *opt)
 {
+	printf("I'm here random_allele_partition\n");
 	int i, l, k, a, m, m_start;
 
 	for (i = 0; i < dat->I; i++)
@@ -423,18 +431,25 @@ void random_allele_partition(data *dat, model *mod, options *opt)
 			m_start = dat->L_alleles && dat->L_alleles[l][0] == MISSING;
 			for (k = 0; k < mod->K; k++)
 				for (m = m_start; m < dat->uniquealleles[l]; m++)
-					mod->diklm[i][k][l][m] = 0;
+					{mod->diklm[i][k][l][m] = 0;
+					//printf("mod->diklm = ",mod->diklm[i][k][l][m]);
+					}
 			for (a = 0; a < dat->ploidy; a++) {
 				srand(opt->process*time(0));
 				k = (int) rand() % mod->K;  //random pick up a k,and say that value(head/hail) is belong to that K(coin)
+				//printf("k here is set by time = %d", k);
 				/* alleles are not array indices */
 				if (dat->L_alleles) {
 					for (m = m_start; m < dat->uniquealleles[l]; m++)
-						if (dat->IL[2*i + a][l] == dat->L_alleles[l][m])
+						if (dat->IL[2*i + a][l] == dat->L_alleles[l][m]) {
 							mod->diklm[i][k][l][m]++;
+							//printf("mod->diklm = ",mod->diklm[i][k][l][m]);
+						}
+				}
 				/* alleles are array indices */
-				} else {
+				 else {
 					mod->diklm[i][k][l][dat->IL[2*i + a][l]]++;
+					//printf("mod->diklm = ",mod->diklm[i][k][l][m]);
 				}
 			}
 //			mod->IL_K[i][l] = (int) rand() % mod->K;

@@ -517,6 +517,7 @@ void m_step_admixture_orig(options *opt, data *dat, model *mod)
 	int i, k, l, m, m_start;
 	double temp;
 
+	printf("I'm here m_step_admixture_orig\n");
 	/* TIME COMPLEXITY: I*K*(2+T) + K*T*(I+2) */
 	/* FASTER VERSION: I*K*(2 + M) + K*(2*T + 2*L*M*I) */
 
@@ -558,12 +559,14 @@ void m_step_admixture_orig(options *opt, data *dat, model *mod)
 					for (m = m_start; m < dat->uniquealleles[l]; m++) {
 						mod->etaik[i][k]
 							+= mod->diklm[i][k][l][m];
+							//printf("mod->diklm[i][k][l][m] = \n",mod->diklm[i][k][l][m]);
 						if (debug & 1)
 							fprintf(stderr, "diklm[%d][%d][%d][%d]: %f (%f)\n",
 								i, k, l, m, mod->diklm[i][k][l][m],
 								mod->etaik[i][k]);
 					}
 				}
+				//printf("mod->etaik[i][k] = \n",mod->etaik[i][k]);
 				temp += mod->etaik[i][k];
 			}
 			if (debug & 1)

@@ -36,6 +36,8 @@ void bubbleSort(int *numbers, int array_size);
  */
 int read_file(options *opt, data *dat)
 {
+
+	printf("Here read_file\n");
 	FILE *f1;		/* file handle */
 	int n_info_col = 2;	/* no. non-loci columns */
 	int i, j, l, idv;	/* indices */
@@ -570,6 +572,7 @@ void bubbleSort(int *numbers, int array_size)
 
 int read_qfile(options *opt, data *dat, model *mod)
 {
+	printf("I'm here read_qfile\n");
 	int i, k;
 	int err = NO_ERROR;
 	FILE *fp = fopen(opt->qfile, "r");

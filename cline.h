@@ -13,12 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 
-int usage_error(const char **argv, int i, void *obj);
-int read_int(int argc, const char **argv, int i, void *obj);
-unsigned int read_uint(int argc, const char **argv, int i, void *obj);
-long read_long(int argc, const char **argv, int i, void *obj);
-double read_double(int argc, const char **argv, int i, void *obj);
-char read_char(int argc, const char **argv, int i, void *obj);
+int usage_error(char **argv, int i, void *obj);
+int read_int(int argc, char **argv, int i, void *obj);
+unsigned int read_uint(int argc, char **argv, int i, void *obj);
+long read_long(int argc, char **argv, int i, void *obj);
+double read_double(int argc, char **argv, int i, void *obj);
+char read_char(int argc,  char **argv, int i, void *obj);
 void print_usage(const char *);
 void fprint_usage(FILE *, const char *, void *obj);
 

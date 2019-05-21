@@ -27,7 +27,7 @@
  * @param obj void pointer to additional usage information
  * @return (simple) error code
  */
-int usage_error(const char **argv, int i, void *obj)
+int usage_error(char **argv, int i, void *obj)
 {
 	fprintf(stderr, "ERROR -- incorrect command line usage\n");
 	if (i >= 0)
@@ -56,7 +56,7 @@ int usage_error(const char **argv, int i, void *obj)
  * @param obj void pointer to additional usage information
  * @return the parsed integer or errno is error
  */
-int read_int(int argc, const char **argv, int i, void *obj)
+int read_int(int argc, char **argv, int i, void *obj)
 {
 	int n;
 	char *ret_ptr;
@@ -89,7 +89,7 @@ int read_int(int argc, const char **argv, int i, void *obj)
  * @param obj void pointer to additional usage information
  * @return the parsed unsigned integer or errno is error
  */
-unsigned int read_uint(int argc, const char **argv, int i, void *obj)
+unsigned int read_uint(int argc, char **argv, int i, void *obj)
 {
 	unsigned int n;
 	char *ret_ptr;
@@ -121,7 +121,7 @@ unsigned int read_uint(int argc, const char **argv, int i, void *obj)
  * @param obj void pointer to additional usage information
  * @return the parsed long or errno is error
  */
-long read_long(int argc, const char **argv, int i, void *obj)
+long read_long(int argc, char **argv, int i, void *obj)
 {
 	long n;
 	char *ret_ptr;
@@ -146,7 +146,7 @@ long read_long(int argc, const char **argv, int i, void *obj)
  * @param obj void pointer to additional usage information
  * @return the parsed integer or errno is error
  */
-double read_double(int argc, const char **argv, int i, void *obj)
+double read_double(int argc, char **argv, int i, void *obj)
 {
 	double d;
 	char *ret_ptr;
@@ -170,7 +170,7 @@ double read_double(int argc, const char **argv, int i, void *obj)
  * @param obj void pointer to additional usage information
  * @return the parsed char or errno is error
  */
-char read_char(int argc, const char **argv, int i, void *obj)
+char read_char(int argc, char **argv, int i, void *obj)
 {
 	if (i==argc)
 		return (errno = usage_error(argv, i-1, obj));

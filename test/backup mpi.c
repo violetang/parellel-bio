@@ -15,7 +15,6 @@
  */
 
 #include "mpi.h"
-#include "limits.h"
 #include <time.h>
 #include "cline.h"	/* command line */
 #include "multiclust.h"
@@ -27,7 +26,7 @@ int make_data(data **dat);
 int make_model(model **);
 
 /* set/parse options and model; verify integrity */
-int parse_options(options *opt, data *dat, int argc, char **argv);
+int parse_options(options *opt, data *dat, int argc, const char **argv);
 int allocate_model(options *opt, model *mod, data *dat);
 int synchronize(options *opt, data *dat, model *mod);
 
@@ -61,10 +60,9 @@ const char *accel_method_names[NUM_ACCELERATION_METHODS] = {
 
 
 
-int main(int argc, char *argv[])
+int main(int argc, const char **argv)
 {
-	
-	int procnum = 0;
+	//********************************************
 	int my_rank;    //the index of the process
     int p;          //opt->process
     
@@ -72,12 +70,8 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);     
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &p);
-	//printf("Hi i am here...-MPI has been initialized, and my rank is %d \n",my_rank);
-/*
-	int i = 0;
-	for (i = 0; i < argc; i++)
-		printf("%s ",argv[i]);
-*/
+	//*************************************************
+
 	options *opt = NULL;	/* run options */
 	data *dat = NULL;	/* genetic data */
 	model *mod = NULL;	/* model parameters */
@@ -95,21 +89,10 @@ int main(int argc, char *argv[])
 	if ((err = make_model(&mod)))
 		goto FREE_AND_EXIT;
 
-	int i = 0;
-	for (i = 0; i < argc; i++)
-		printf("%s ",argv[i]);
 	/* parse command-line options */
-	if ((err = parse_options(opt, dat, argc, argv)))	
+	if ((err = parse_options(opt, dat, argc, argv)))
 		goto FREE_AND_EXIT;
 
-	/*
-	for (procnum = 0; procnum < p; procnum++) {
-		if (my_rank == procnum) {
-			if ((err = parse_options(opt, dat, argc, argv)))	
-			goto FREE_AND_EXIT;
-		}
-	}
-	*/
 	/* read data */
 	if ((err = read_file(opt, dat)))
 		goto FREE_AND_EXIT;
@@ -142,7 +125,7 @@ FREE_AND_EXIT:
 	MPI_Finalize();
 	return err;
 
-}  /*main */
+} /* main */
 
 
 /**
@@ -163,8 +146,7 @@ FREE_AND_EXIT:
  */
 int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_rank, int p)
 {
-	//MPI
-	printf("Here estimate model\n");
+	//MPI**********************************************
 	float dest = 0;
     int tag = 1;
     int source;     //Process sending the possibility 
@@ -173,6 +155,8 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
     int max_processor = 0;  //processor who get the biggest logL
     int max_logL = INT_MIN;
     int amimax = 0; //int is 1 if processor is max, it's 0 otherwise
+
+	//**********************************************
 	
 	int total_iter = 0;
 	int err = NO_ERROR;
@@ -187,9 +171,7 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
 	//	mod->K = 2;
 
 	do { 
-		printf("Here Starts\n");
-		printf("my rank : %d\n", my_rank);
-
+		
 		/* Setting the largest size of the U and V arrays to be the larger of K and max_M */
 		if (dat->max_M < mod->K)
 			dat->max_M = mod->K;
@@ -204,7 +186,6 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
 			return err;
 
 		total_iter += mod->n_total_iter;
-		//printf("total_iter = \n", total_iter);
 		//here you would have mod->max_logL for each processor
 		//From each processor, send that max_logL to the head node
 
@@ -212,25 +193,23 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
 		if (opt->n_bootstrap && mod->K == mod->null_K)
 			mod->max_logL_H0 = mod->max_logL;
 
-		//printf("max_logL = \n", mod->max_logL);
-
 		/* was BUG: popq_admix() and indivq_admix() written here for
 		 * last iteration, not best iteration */
 
-		/**********************************************************/
+		//************************************************************************
 		//different rank has different task
 		//????? result == mod->max_logL, or create a new variable, just in case.
 		if(my_rank == 0){          
             for(int proc = 1; proc < p; proc++){
-				printf("Process 0 is recieving\n");
+                cout<<"Process 0 is recieving "<<endl;
                 MPI_Recv(&mod->max_logL, 1, MPI_FLOAT, proc, tag*proc, MPI_COMM_WORLD, &status);
                 if(max_logL < mod->max_logL){
                     max_logL = mod->max_logL;
                     max_processor = proc;
                 }
             }
-            //cout<<"the biggest one is"<<max_logL<<endl;
-            //cout<<"the processor with biggest logL is"<<max_processor<<endl;
+            cout<<"the biggest one is"<<max_logL<<endl;
+            cout<<"the processor with biggest logL is"<<max_processor<<endl;
             //Head node here knows which processor has the maxL
             //So it has to send that info to every processor, so they can proceed
             for (int proc = 1; proc < p; proc++){
@@ -242,9 +221,9 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
 		}
 		else
 		{
-			//cout<<"Process "<<my_rank<<" sending "<<endl;
+			cout<<"Process "<<my_rank<<" sending "<<endl;
 			MPI_Send(&mod->max_logL, 1, MPI_FLOAT, dest, tag*my_rank, MPI_COMM_WORLD);
-			//cout<<"my result = " << &mod->max_logL;
+			cout<<"my result = " << result;
 
 			MPI_Barrier(MPI_COMM_WORLD);
 			
@@ -252,13 +231,11 @@ int estimate_model(options *opt, data *dat, model *mod, int bootstrap, int my_ra
 			
 			if (amimax == 1)
 				//do printout process
-				//cout<< "Hey I am processor "<<my_rank<<" and I have the max logl"<<endl;
-				printf("Hey I am processor %d and i have the max logl",my_rank);
+				cout<< "Hey I am processor "<<my_rank<<" and I have the max logl"<<endl;
 			else if (amimax == 0)
-				//cout<< "I am processor "<<my_rank<<" and I don't have the max logl :("<<endl;
-				printf("Hey I am processor %d and i don't the max logl",my_rank);
+				cout<< "I am processor "<<my_rank<<" and I don't have the max logl :("<<endl;
 		}
-		
+		//************************************************************************
 
 		/* free parameters */
 		free_model_data(mod,opt);
@@ -328,13 +305,11 @@ int maximize_likelihood(options *opt, data *dat, model *mod, int bootstrap)
 	int ntimes = 0;
 	clock_t clk;
 
-	printf("I'm here maximize_likelihood\n");
 	for (i=0; opt->n_seconds || i<opt->n_init; i++) {
 
 		/* initialize parameters */
 		if ((err = initialize_model(opt, dat, mod)))
 			return err;
-		printf("I'm done initialize_model\n");
 
 		/* maximize likelihood */
 		if (opt->accel_scheme) 
@@ -452,10 +427,8 @@ write_data(opt, dat, 1);
 */
 
 		/* fit models H0 and HA */
-		/* commment here because the estimate_model was changed
-		if ((err = estimate_model(opt, dat, mod, 1, my_rank, p)))
+		if ((err = estimate_model(opt, dat, mod, 1)))
 			return err;
-			*/
 
 		/* mod->max_logL is maximum log likelihood under HA */
 		if (mod->ts_bs >+ mod->ts_obs)
@@ -487,8 +460,6 @@ write_data(opt, dat, 1);
  */
 int synchronize(options *opt, data *dat, model *mod)
 {
-
-	printf("Here synchronize\n");
 	opt->lower_bound = MIN(opt->lower_bound, 1.0 / dat->I / dat->ploidy - 0.5 / dat->I / dat->ploidy);
 	if (dat->I < opt->max_K)
 		return message(stderr, __FILE__, __func__, __LINE__, ERROR_MSG,
@@ -522,8 +493,7 @@ int synchronize(options *opt, data *dat, model *mod)
  */
 int make_options(options **opt)
 {
-	printf("Here Make_options\n");
-	
+
 	*opt = malloc(sizeof **opt);
 	if (*opt == NULL)
 		return message(stderr, __FILE__, __func__, __LINE__, ERROR_MSG,
@@ -592,7 +562,6 @@ void free_options(options *opt)
 int make_data(data **dat)
 {
 
-	printf("Here make_data\n");
 	*dat = malloc(sizeof **dat);
 	if (*dat == NULL)
 		return message(stderr, __FILE__, __func__, __LINE__, ERROR_MSG,
@@ -657,8 +626,6 @@ void free_data(data *dat)
  */
 int make_model(model **mod)
 {
-
-	printf("Here make model\n");
 	*mod = malloc(sizeof **mod);
 	if (*mod == NULL)
 		return message(stderr, __FILE__, __func__, __LINE__, ERROR_MSG,
@@ -714,8 +681,6 @@ int make_model(model **mod)
  */
 int allocate_model(options *opt, model *mod, data *dat)
 {
-	printf(" I'm here allocate_model\n");
-
 	MAKE_3JAGGED_ARRAY(mod->pKLM, mod->K, dat->L, dat->uniquealleles);
 	if (opt->n_bootstrap && !mod->mle_pKLM)
 		MAKE_3JAGGED_ARRAY(mod->mle_pKLM, mod->K, dat->L, dat->uniquealleles);
@@ -852,10 +817,8 @@ void free_model(model *mod, options *opt)
  * @param argv command-line arguments
  * @return error status
  */
-int parse_options(options *opt, data *dat, int argc, char **argv)
+int parse_options(options *opt, data *dat, int argc, const char **argv)
 {
-
-	printf("Here parse_options\n");
 	int i, j;
 	int err = NO_ERROR;
 	char a;
@@ -934,7 +897,6 @@ int parse_options(options *opt, data *dat, int argc, char **argv)
 			case 'k':
 				opt->max_K = read_int(argc, argv, ++i,
 					(void *)opt);
-				printf("parse %d\n", opt->max_K);
 				if (opt->max_K < 1 || errno)
 					goto CMDLINE_ERROR;
 				opt->min_K = opt->max_K;
@@ -993,9 +955,9 @@ int parse_options(options *opt, data *dat, int argc, char **argv)
 			case 'v':
 				opt->verbosity = VERBOSE;
 				break;
-			//case 'P':
-			//	opt->process = read_int(argc,argv,++i,(void*)opt);
-			//	break;
+			case 'P':
+				opt->process = read_int(argc,argv,++i,(void*)opt);
+				break;
 			default:
 				err = INVALID_CMD_OPTION;
 				goto CMDLINE_ERROR;

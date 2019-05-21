@@ -2,11 +2,11 @@
 # 'make' to compile mixture model as run_mix
 # 'make admix' to compile mixture model as run_admix
 
-CC=gcc
+CC=mpicc
 CFLAGS=-std=c99 -Wall -W -O3 -ffast-math -fexpensive-optimizations -funroll-all-loops -finline-functions -pedantic
 #CFLAGS=-std=c99 -Wall -W -pedantic -pg -O3
 #CFLAGS=-std=c99 -Wall -W -pedantic -g
-LDFLAGS=-lm -I/usr/local/include -L/usr/local/lib -lgsl -l gslcblas
+LDFLAGS=-lm -I/usr/local/include -L/usr/local/lib -L/usr/lib64 -lgsl -lgslcblas
 
 # Local variables
 SRC = $(wildcard *.c)
